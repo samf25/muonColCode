@@ -39,8 +39,9 @@ for event in tree:
     hits = 0
     # Loop through each entry. Create particle and add to list if pT is above cutoff
     for i in range(len(event.tsrpx)):
-        ene = np.sqrt(event.tsrpx[i]**2 +event.tsrpy[i]**2 +event.tsrpz[i]**2 +mmu**2)
-        part = fj.PseudoJet(event.tsrpx[i], event.tsrpy[i], event.tsrpz[i], ene)
+        momentum = [event.tsrpx[i]/1000, event.tsrpy[i]/1000, event.tsrpz[i]/1000]
+        ene = np.sqrt(momentum[0]**2 +momentum[1]**2 +momentum[2]**2 +mmu**2)
+        part = fj.PseudoJet(momentum[0], momentum[1], momentum[2], ene)
         if np.sqrt(part.kt2()) > 0.5:
             vect4.append(part)
         totalpt += np.sqrt(part.kt2())
