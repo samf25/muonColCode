@@ -27,6 +27,10 @@ trackHits = []
 smallDR = []
 ratios = []
 missedpT = []
+trackEta = []
+trackTheta = []
+beta = []
+
 
 # Function to determine the distance between two particles in eta-phi
 def etaPhiDist(p1, p2):
@@ -44,6 +48,8 @@ for event in tree:
         part = fj.PseudoJet(momentum[0], momentum[1], momentum[2], ene)
         if part.pt() > 0.5:
             vect4.append(part)
+            trackEta.append(part.pseudorapidity())
+            trackTheta.append(np.arctan(part.py()/part.px()))
         totalpt += part.pt()
         hits += 1
     if count % 5 == 0:
@@ -63,51 +69,27 @@ for event in tree:
             part = fj.PseudoJet(event.mcmox[i], event.mcmoy[i], event.mcmoz[i], event.mcene[i])
             bqs.append(part)
             bpT.append(part.pt())
+            beta.append(part.pseudorapidity())
             if len(bqs) == 2:
                 break
-
-    # Makes jets
-    cluster = fj.ClusterSequence(vect4, jetdef)
-    jets = cluster.inclusive_jets(1)
-    
-    # Determine if b quarks align with any jets
-    dr = []
-    check = True
-    for b in bqs:
-        ds = []
-        for jet in jets:
-            # Collect jet pTs
-            if check:
-                jetpT.append(jet.pt())
-                check = False
-            ds.append(etaPhiDist(b, jet))
-        if len(ds) > 0:
-            # If the b quark is aligned with the jet add it to the list
-            d = np.min(ds)
-            if d < etaPhiThresh:
-                alignedBs += 1
-                dr.append(d)
-                ratios.append(jets[ds.index(d)].pt() / b.pt())
-            # Otherwise add it to the missed array
-            else:
-                missedpT.append(b.pt())
-    if len(dr) > 0:
-        smallDR.append(np.min(dr))
-    
-
-print()
-print("ALIGNED Bs FOUND: " + str(alignedBs))
-
+   
 # A function to make a histogram
 def histgraph(data, title, file, bins = 40):
     canvas = ROOT.TCanvas("c"+title)
-    g = ROOT.TH1F(title, title, bins, 0, np.max(data))
+    mi = 0
+    if np.min(data) < mi:
+        mi = np.min(data)
+    g = ROOT.TH1F(title, title, bins, mi, np.max(data))
     for p in data:
         g.Fill(p)
     g.Draw()
 
     canvas.Print(file)
     canvas.Close()
+
+histgraph(trackEta, "Track Etas", "tracketa.pdf")
+histgraph(trackTheta, "Track Thetas", "tracktheta.pdf")
+histgraph(beta, "b Etas", "beta.pdf")
 
 # Create Histograms
 #histgraph(pT, "Total Track pT", "total_pT.pdf")
